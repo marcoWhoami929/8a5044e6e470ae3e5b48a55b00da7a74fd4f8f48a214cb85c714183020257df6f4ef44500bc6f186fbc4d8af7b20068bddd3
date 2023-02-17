@@ -14,8 +14,8 @@ if ($action == 'ventasYearToDay') {
 
 
     if ($fechaInicial == "" && $fechaFinal == "") {
-        $añoInicial = '".$año1."';
-        $añoFinal = '".$año2."';
+        $añoInicial = 2022;
+        $añoFinal = 2023;
     } else {
         $añoInicial = substr($_REQUEST['fechaInicial'], 0, 4);
         $añoFinal = substr($_REQUEST['fechaFinal'], 0, 4);

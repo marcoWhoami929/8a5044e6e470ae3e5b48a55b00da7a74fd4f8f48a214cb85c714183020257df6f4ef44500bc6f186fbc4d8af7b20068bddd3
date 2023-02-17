@@ -11361,6 +11361,8 @@ SELECT *,IsNull([2013],0) + IsNull([2014],0) + IsNull([2015],0) + IsNull([2016],
 
           $sWhere = " adoc.CCANCELADO  = '" . $estatus . "' and adoc.CFECHA >= '" . $añoInicial . "-01-01' and adoc.CFECHA <= '" . $anterior . "' and YEAR(adoc.CFECHA) = '" . $añoInicial . "'";
           $sWhere2 = " adoc.CCANCELADO  = '" . $estatus . "' and adoc.CFECHA >= '" . $añoFinal . "-01-01' and adoc.CFECHA <= '" . $hoy . "' and YEAR(adoc.CFECHA) = '" . $añoFinal . "'";
+          
+
           $sql = "WITH ventasData AS(SELECT 
         adoc.CSERIEDOCUMENTO,
         adoc.CFOLIO,
