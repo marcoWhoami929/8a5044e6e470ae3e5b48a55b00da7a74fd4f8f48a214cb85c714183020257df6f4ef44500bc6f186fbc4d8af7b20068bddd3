@@ -5246,7 +5246,9 @@ function detalleProductosDocumento(idDocumento) {
         "NOMBRE",
         "UNIDADES",
         "UNIDAD",
-        "COSTO",
+        "U COSTO",
+        "COSTO ESP",
+        "COSTO CAP",
         "TOTAL",
       ];
       body = document.getElementById("tablaDetalleDocumentoIndicadores");
@@ -5267,7 +5269,9 @@ function detalleProductosDocumento(idDocumento) {
         "CUNIDADESCAPTURADAS",
         "CNOMBREUNIDAD",
         "COST",
-        "TOTAL",
+        "CCOSTOCAPTURADO",
+        "CCOSTOESPECIFICO",
+        "CTOTAL",
       ];
       // Crea las celdas
       var acumulado = 0;
@@ -5278,15 +5282,25 @@ function detalleProductosDocumento(idDocumento) {
           var celda = document.createElement("td");
           if (arregloNombres[j] == "CIDPRODUCTO") {
             var valor = parseInt(response[i][arregloNombres[j]]);
-          } else if (arregloNombres[j] == "TOTAL") {
+          } else if (arregloNombres[j] == "CTOTAL" || arregloNombres[j] == "COST" || arregloNombres[j] == "CCOSTOCAPTURADO" || arregloNombres[j] == "CCOSTOESPECIFICO") {
             if (response[i][arregloNombres[j]] === null) {
               var monto = 0;
             } else {
+
               var monto = response[i][arregloNombres[j]];
+              if(arregloNombres[j] == "CTOTAL"){
+               var monto2  = response[i][arregloNombres[j]];
+              } else {
+               var monto2  = 0;
+              }
+              
             }
             var valor2 = parseFloat(monto);
-            valor = "$" + formatNumber(parseFloat(Math.abs(valor2).toFixed(2)));
-            acumulado = acumulado + parseFloat(Math.abs(valor2).toFixed(2));
+            var valor = "$" + formatNumber(parseFloat(Math.abs(valor2).toFixed(2)));
+            
+            acumulado = acumulado + parseFloat(Math.abs(parseFloat(monto2)).toFixed(2));
+            
+            
           } else {
             var valor = response[i][arregloNombres[j]];
           }
@@ -5304,7 +5318,7 @@ function detalleProductosDocumento(idDocumento) {
         var celda = document.createElement("td");
         celda.style.color = "#ffffff";
         celda.style.fontWeight = "900";
-        if (arregloNombres[j] == "TOTAL") {
+        if (arregloNombres[j] == "CTOTAL") {
           valor = "$" + formatNumber(parseFloat(acumulado.toFixed(2)));
         } else {
           valor = "";

@@ -562,7 +562,7 @@
     </div>
 </div>
 <div class="modal fade" id="modalDetalleDocumentoIndicadores" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-lg" role="document" style="width: 1200px;">
         <div class="modal-content">
             <div class="modal-header estilosTablas">
                 <h4 class="modal-title" id="exampleModalLabel"><span id="textModal"></span></h4>
