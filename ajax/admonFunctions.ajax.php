@@ -300,6 +300,15 @@ class AjaxAdmon
 
         echo json_encode($respuesta);
     }
+    public function loadMarcasUltimosCostos()
+    {
+
+        $empresa = $this->empresa;
+
+        $respuesta = ModelAdmon::mdlObtenerListaMarcasEmpresa($empresa);
+
+        echo json_encode($respuesta);
+    }
 }
 if (isset($_POST["idDocumento"])) {
     $detalleCompra = new AjaxAdmon();
@@ -434,5 +443,11 @@ if (isset($_POST["accion"])) {
         $actualizarObjetivo->objetivo = $_POST["objetivo"];
         $actualizarObjetivo->campo = $_POST["campo"];
         $actualizarObjetivo->actualizarObjetivoAgente();
+    }
+     else if ($_POST["accion"] == "loadMarcasUltimosCostos") {
+
+        $loadMarcas = new AjaxAdmon();
+        $loadMarcas->empresa = $_POST["empresa"];
+        $loadMarcas->loadMarcasUltimosCostos();
     }
 }

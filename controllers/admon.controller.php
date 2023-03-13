@@ -74,7 +74,7 @@ class ControllerAdmon
                             );
 
                             $respuesta = ModelAdmon::mdlRegistroBitacora("bitacora", $datos);
-                            if ($_SESSION["grupo"] != 'Administracion') {
+                            if ($_SESSION["grupo"] != 'Administracion' AND $_SESSION["grupo"] != 'Ecommerce') {
 
                                 echo '<script>
                            
@@ -82,6 +82,14 @@ class ControllerAdmon
                                 /*window.location = "ultimosCostos";*/
     
                             </script>';
+                            }else if($_SESSION["grupo"] == 'Ecommerce'){
+                                echo '<script>
+                           
+                                window.location = "ecommerce";
+                                /*window.location = "dashboard";*/
+    
+                            </script>';
+
                             } else {
 
                                 echo '<script>

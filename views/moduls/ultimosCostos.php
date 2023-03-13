@@ -91,16 +91,18 @@
                                                                             <div style="width: 100%; margin: auto;">
                                                                                 <input id="arregloProductosCostos">
                                                                             </div>
+                                                                            <div style="width: 100%; margin: auto;">
+                                                                                <input id="arregloMarcasCostos">
+                                                                            </div>
                                                                             <div class="filter-group">
                                                                                 <span class="filter-icon"><i class="fa fa-filter"></i></span>
                                                                                 <label>Empresa</label>
 
-                                                                                <select class="form-control" id="empresa" onchange="cargarUltimosCostos(1);">
+                                                                                <select class="form-control" id="empresa" onchange="cargarUltimosCostos(1);loadMarcasCostos();">
+                                                                                    <option value="DEKKERLAB" selected="" empresa="adDEKKERLAB">DEKKERLAB</option>
+                                                                                    <option value="PINTURAS" empresa="adPINTURAS2020SADEC">PINTURAS</option>
+                                                                                    <option value="FLEX" empresa="adFLEX2020SADEC">FLEX</option>
 
-                                                                                    <option value="PINTURAS">PINTURAS</option>
-                                                                                    <option value="FLEX">FLEX</option>
-                                                                                    <option value="TORRES">TORRES</option>
-                                                                                    <option value="DEKKERLAB" selected="">DEKKERLAB</option>
 
                                                                                 </select>
                                                                             </div>
@@ -126,6 +128,28 @@
                                                                             </div>
 
                                                                             <div class="filter-group">
+                                                                                <span class="filter-icon"><i class="fa fa-filter"></i></span>
+                                                                                <label>Estatus</label>
+
+                                                                                <select class="form-control" id="estatus" onchange="cargarUltimosCostos(1);">
+
+                                                                                    <option value="">Todos</option>
+                                                                                    <option value="1">Activos</option>
+                                                                                    <option value="0">Inactivos</option>
+
+
+                                                                                </select>
+                                                                            </div>
+
+                                                                            <div class="filter-group">
+                                                                                <label>Marca</label>
+                                                                                <span class="filter-icon"><i class="fa fa-filter"></i></span>
+                                                                                <select class="form-control selectorMarcasCostos" name="marca" id="marca">
+
+                                                                                </select>
+                                                                            </div>
+
+                                                                            <div class="filter-group">
                                                                                 <button type="button" id="searchProductoVenta" class="btn btn-primary" data-toggle="modal" data-target="#modalProductosVenta"> <i class="fa fa-search"></i>Productos</button>
 
 
@@ -140,10 +164,10 @@
                                                                                     <option>50</option>
                                                                                     <option>100</option>
                                                                                     <option>500</option>
-                                                                                    <option>1000</option>
+                                                                                    <option selected="">1000</option>
                                                                                     <option>1500</option>
                                                                                     <option>2000</option>
-                                                                                    <option selected="">10000</option>
+                                                                                    <option>10000</option>
                                                                                 </select>
                                                                             </div>
                                                                             <div class="filter-group">
@@ -157,8 +181,9 @@
                                                                             <div class="filter-group">
                                                                                 <span>Orden</span>
                                                                                 <select class="form-control" id="orden" onchange="cargarUltimosCostos(1);">
-                                                                                    <option value="desc">Desc</option>
                                                                                     <option value="asc">Asc</option>
+                                                                                    <option value="desc">Desc</option>
+
                                                                                 </select>
                                                                             </div>
 
@@ -267,7 +292,7 @@
                         </div>
                     </div>
                 </form>
-                <div id="loader2" style="position: absolute;	text-align: center;	top: 55px;	width: 100%;display:none;"></div><!-- Carga gif animado -->
+                <div id="loader2" style="position: absolute;    text-align: center; top: 55px;  width: 100%;display:none;"></div><!-- Carga gif animado -->
                 <div class="outer_div2"></div><!-- Datos ajax Final -->
             </div>
             <div class="modal-footer">
@@ -290,6 +315,17 @@
         beforeTagDelete: function(field, editor, tags, val) {
             var arrayProductosCostos = localStorage.getItem("arrayProductosCostos");
             removeItemFromArregloBusqueda(arrayProductosCostos, val, "arrayProductosCostos")
+        }
+
+    });
+
+    $('#arregloMarcasCostos').tagEditor({
+        initialTags: JSON.parse(localStorage.getItem("arrayMarcasCostos")),
+        delimiter: ', ',
+        forceLowercase: false,
+        beforeTagDelete: function(field, editor, tags, val) {
+            var arrayMarcasCostos = localStorage.getItem("arrayMarcasCostos");
+            removeItemFromArregloBusqueda(arrayMarcasCostos, val, "arrayMarcasCostos")
         }
 
     });

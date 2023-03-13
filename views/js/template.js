@@ -97,8 +97,17 @@ $(function () {
         $(".selectorCanalComercial").select2();
         break;
       case "ultimosCostos":
+        loadMarcasCostos();
         cargarUltimosCostos(1);
         loadProductosVenta(1);
+        $(".selectorMarcasCostos").select2();
+        $(".selectorMarcasCostos").on("select2:select", function (e) {
+          var marca = e.params.data.text;
+          var id = e.params.data.id;
+
+          agregarDatosBusqueda(marca, "arrayMarcasCostos");
+          agregarDatosBusqueda(id, "arrayMarcaCostos");
+        });
 
         break;
       case "ventasClienteDiario":
@@ -370,6 +379,12 @@ $(function () {
         agregarEvento("Visualizo Detalle De Ventas Objetivos", 4);
 
         break;
+      case "ecommerce":
+       localStorage.setItem("arrayCategoria", "[]");
+       $("#periodo").val(mesCurrent);
+        $(".selectorCategoria").select2();
+        cargarListaProductosEcommerce(1);
+      break;
     }
   }
 
@@ -438,6 +453,20 @@ $(function () {
     var arreglo = localStorage.getItem("arrayCanalUtilidad");
     removeItemFromArregloBusqueda(arreglo, canal, "arrayCanalUtilidad");
   });
+  /***CATEGORIA */
+  $(".selectorCategoria").select2();
+  var categorias = JSON.parse(localStorage.getItem("arrayCategoria"));
+  $(".selectorCategoria").val(categorias).trigger("change");
+  $(".selectorCategoria").on("select2:select", function (e) {
+    var categoria = e.params.data.id;
+    agregarDatosBusqueda(categoria, "arrayCategoria");
+  });
+  //detectamos se opcion se quito funciona con select multiple
+  $(".selectorCategoria").on("select2:unselect", function (e) {
+    var categoria = e.params.data.id;
+    var arreglo = localStorage.getItem("arrayCategoria");
+    removeItemFromArregloBusqueda(arreglo, categoria, "arrayCategoria");
+  });
 });
 
 function cargarConceptosPinturas(page) {
@@ -496,7 +525,9 @@ function cargarUltimosCostos(page) {
   var arregloProductos = JSON.parse(
     localStorage.getItem("arrayProductosCostos")
   );
+  var arregloMarcas = JSON.parse(localStorage.getItem("arrayMarcasCostos"));
   var año = $("#anio").val();
+  var estatus = $("#estatus").val();
   var empresa = $("#empresa").val();
   var per_page = $("#per_page").val();
   var campoOrden = $("#campoOrden").val();
@@ -512,11 +543,24 @@ function cargarUltimosCostos(page) {
     }
   }
 
+  if (arregloMarcas === null) {
+    localStorage.setItem("arrayMarcasCostos", "[]");
+    var marcas = "";
+  } else {
+    if (arregloMarcas == "[]") {
+      var marcas = "";
+    } else {
+      var marcas = arregloMarcas.toString();
+    }
+  }
+
   var parametros = {
     action: "ultimosCostos",
     page: page,
     query: productos,
+    marcas: marcas,
     anioCostos: año,
+    estatus: estatus,
     empresa: empresa,
     per_page: per_page,
     campoOrden: campoOrden,
@@ -535,12 +579,49 @@ function cargarUltimosCostos(page) {
     },
   });
 }
+function loadMarcasCostos() {
+  var empresa = $("#empresa>option:selected").attr("empresa");
+
+  var datos = new FormData();
+  datos.append("accion", "loadMarcasUltimosCostos");
+  datos.append("empresa", empresa);
+
+  $.ajax({
+    url: "ajax/admonFunctions.ajax.php",
+    method: "POST",
+    data: datos,
+    cache: false,
+    contentType: false,
+    processData: false,
+    dataType: "json",
+    success: function (data) {
+      $("#marca").empty();
+      var datos = data;
+      var select = document.getElementById("marca");
+      var option = document.createElement("option");
+      option.innerHTML = "Todas";
+      option.value = "";
+      select.appendChild(option);
+      for (var i = 0; i < datos.length; i++) {
+        var option = document.createElement("option");
+        option.innerHTML = datos[i]["Marca"];
+        option.value = datos[i]["Id"];
+        select.appendChild(option);
+      }
+    },
+  });
+}
 function descargarReporteCostos() {
   var arregloProductos = JSON.parse(
     localStorage.getItem("arrayProductosCostos")
   );
+  var arregloMarcas = JSON.parse(localStorage.getItem("arrayMarcasCostos"));
   var año = $("#anio").val();
+  var estatus = $("#estatus").val();
   var empresa = $("#empresa").val();
+  var per_page = $("#per_page").val();
+  var campoOrden = $("#campoOrden").val();
+  var orden = $("#orden").val();
   if (arregloProductos === null) {
     localStorage.setItem("arrayProductos", "[]");
     var productos = "";
@@ -551,11 +632,35 @@ function descargarReporteCostos() {
       var productos = arregloProductos.toString();
     }
   }
+
+  if (arregloMarcas === null) {
+    localStorage.setItem("arrayMarcasCostos", "[]");
+    var marcas = "";
+  } else {
+    if (arregloMarcas == "[]") {
+      var marcas = "";
+    } else {
+      var marcas = arregloMarcas.toString();
+    }
+  }
   location.href =
     "views/moduls/reporteador.php?reporteUltimosCostos=" +
+    "&empresa=" +
     empresa +
+    "&page=" +
+    1 +
     "&query=" +
     productos +
+    "&marcas=" +
+    marcas +
+    "&estatus=" +
+    estatus +
+    "&per_page=" +
+    per_page +
+    "&campo=" +
+    campoOrden +
+    "&orden=" +
+    orden +
     "&año=" +
     año;
 }
@@ -3902,13 +4007,16 @@ function removeItemFromArregloBusqueda(array, item, nombreArreglo) {
       cargarMargenesUtilidad(1);
       break;
     case "ultimosCostos":
-      cargarUltimosCostos(1);
+        cargarUltimosCostos(1);
       break;
     case "ventasOrigenVentaMensual":
       cargarVentasOrigenVenta(1);
       break;
     case "diarioVentas":
       cargarDiarioVentas(1);
+      break;
+     case "ecommerce":
+      cargarListaProductosEcommerce(1);
       break;
   }
 }
@@ -3961,6 +4069,22 @@ function validateItemArray(array, item, nombreArreglo) {
               arrayProductosCostos,
               val,
               "arrayProductosCostos"
+            );
+          },
+        });
+        break;
+      case "arrayMarcasCostos":
+        $("#arregloMarcasCostos").tagEditor("destroy");
+        $("#arregloMarcasCostos").tagEditor({
+          initialTags: JSON.parse(localStorage.getItem("arrayMarcasCostos")),
+          delimiter: ", ",
+          forceLowercase: false,
+          beforeTagDelete: function (field, editor, tags, val) {
+            var arrayMarcasCostos = localStorage.getItem("arrayMarcasCostos");
+            removeItemFromArregloBusqueda(
+              arrayMarcasCostos,
+              val,
+              "arrayMarcasCostos"
             );
           },
         });
@@ -4043,6 +4167,9 @@ function validateItemArray(array, item, nombreArreglo) {
       case "diarioVentas":
         cargarDiarioVentas(1);
         break;
+       case "ecommerce":
+      cargarListaProductosEcommerce(1);
+      break;
     }
   } else if (array.indexOf(item) > -1) {
     localStorage.setItem("" + nombreArreglo + "", JSON.stringify(array));
@@ -4716,7 +4843,11 @@ function limpiarFiltros(tipo) {
       for (i = 0; i < tags.length; i++) {
         $("#arregloProductosCostos").tagEditor("removeTag", tags[i]);
       }
-
+      localStorage.setItem("arrayMarcasCostos", "[]");
+      var tags = $("#arregloMarcasCostos").tagEditor("getTags")[0].tags;
+      for (i = 0; i < tags.length; i++) {
+        $("#arregloMarcasCostos").tagEditor("removeTag", tags[i]);
+      }
       break;
   }
   switch (ruta[1]) {
@@ -4794,6 +4925,9 @@ function limpiarFiltros(tipo) {
       break;
     case "diarioVentas":
       cargarDiarioVentas(1);
+      break;
+    case "ecommerce":
+      cargarListaProductosEcommerce(1);
       break;
   }
 }
@@ -6522,4 +6656,74 @@ function generarReporteVentasClienteObjetivos(vista) {
     orden +
     "&vista=" +
     vista;
+}
+
+/**
+ * MODULO ECOMMERCE
+ */
+function cargarListaProductosEcommerce(page) {
+  var per_page = $("#per_page").val();
+  var vista = "cargarListaProductosEcommerce";
+  var arregloMarca = JSON.parse(localStorage.getItem("arrayMarca"));
+  var arregloProductos = JSON.parse(localStorage.getItem("arrayProductos"));
+  var estatusFacebook = $("#estatusFacebook").val();
+  var categoria = $("#categoria").val();
+  var clasificacion = $("#clasificacion").val();
+  var almacen = $("option:selected", "#almacen").attr("idAlmacen");
+  var almacen2 = $("#almacen").val();
+  var campoOrden = $("#campoOrden").val();
+  var orden = $("#orden").val();
+  var utilidad = $("#utilidad").val();
+  var utilidadMl = $("#utilidadMl").val();
+  var periodo = $("#periodo").val();
+  if (arregloProductos === null) {
+    localStorage.setItem("arrayProductos", "[]");
+    var producto = "";
+  } else {
+    if (arregloProductos == "[]") {
+      var producto = "";
+    } else {
+      var producto = arregloProductos.toString();
+    }
+  }
+  if (arregloMarca === null) {
+    localStorage.setItem("arrayMarca", "[]");
+    var marca = "";
+  } else {
+    if (arregloMarca == "[]") {
+      var marca = "";
+    } else {
+      var marca = arregloMarca.toString();
+    }
+  }
+  var parametros = {
+    action: "listadoProductosEcommerce",
+    page: page,
+    per_page: per_page,
+    estatusFacebook: estatusFacebook,
+    categoria: categoria,
+    clasificacion: clasificacion,
+    almacen: almacen,
+    almacen2: almacen2,
+    producto: producto,
+    marca: marca,
+    campoOrden: campoOrden,
+    orden: orden,
+    utilidad: utilidad,
+    utilidadMl: utilidadMl,
+    periodo: periodo,
+    vista: vista,
+  };
+  $("#loader").fadeIn("slow");
+  $.ajax({
+    url: "ajax/listadoProductos.ajax.php",
+    data: parametros,
+    beforeSend: function (objeto) {
+      $("#loader").html("Buscando...");
+    },
+    success: function (data) {
+      $(".data").html(data).fadeIn("slow");
+      $("#loader").html("");
+    },
+  });
 }

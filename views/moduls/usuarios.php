@@ -129,6 +129,7 @@
                             <option value="Ventas">Ventas</option>
                             <option value="Almacen">Almacen</option>
                             <option value="Operaciones">Operaciones</option>
+                            <option value="Ecommerce">Ecommerce</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -182,6 +183,7 @@
                             <option value="Ventas">Ventas</option>
                             <option value="Almacen">Almacen</option>
                             <option value="Operaciones">Operaciones</option>
+                             <option value="Ecommerce">Ecommerce</option>
                         </select>
                     </div>
                     <div class="form-group">

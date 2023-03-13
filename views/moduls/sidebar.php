@@ -5,7 +5,21 @@
         <?php
         session_start();
 
-        if ($_SESSION["modulo"] == "Ventas") {
+        if($_SESSION["grupo"] == 'Ecommerce'){
+
+            echo '<div class="pcoded-navigation-label">Ecommerce</div>
+                <ul class="pcoded-item pcoded-left-item">
+                    <li class="">
+                        <a href="ecommerce" class="waves-effect waves-dark">
+                            <span class="pcoded-micon"><i class="fa fa-briefcase"></i><b>UC</b></span>
+                            <span class="pcoded-mtext">Precios Ecommerce</span>
+                            <span class="pcoded-mcaret"></span>
+                        </a>
+                    </li>
+                </ul>';
+
+        }else{
+            if ($_SESSION["modulo"] == "Ventas") {
 
 
             if ($_SESSION["grupo"] != 'Almacen') {
@@ -580,6 +594,8 @@
                 </li>
             </ul>
             ';
+        }
+
         }
         ?>
     </div>

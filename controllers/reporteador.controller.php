@@ -4,11 +4,11 @@ error_reporting(0);
 class ControllerReports
 {
 
-    public function ctrDescargarReporteUltimosCostos($empresa, $query, $año)
+    public function ctrDescargarReporteUltimosCostos($search)
     {
-        $empresaElegida = $empresa;
-        $codigoProducto = $query;
-        $añoElegido = $año;
+        $empresaElegida = $search["empresa"];
+
+        $año = $search["año"];
 
         switch ($empresaElegida) {
             case "PINTURAS":
@@ -21,11 +21,6 @@ class ControllerReports
                 $database = new ultimosCostosFlex();
                 $nombreEmpresa = "F L E X";
                 break;
-            case "TORRES":
-
-                $database = new ultimosCostosTorres();
-                $nombreEmpresa = "T O R R E S";
-                break;
             case "DEKKERLAB":
 
                 $database = new ultimosCostosDekkerlab();
@@ -33,12 +28,12 @@ class ControllerReports
                 break;
         }
 
-        $reporte = $database->getDataReporteUltimosCostos($codigoProducto, $añoElegido);
-        $reporteFechas = $database->getFechaReporteUltimosCostos($codigoProducto, $añoElegido);
+        $reporte = $database->getData($search);
+        $reporteFechas = $database->getDateDocuments($search);
 
         /*=============================================
-			CREAMOS EL ARCHIVO DE EXCEL
-			=============================================*/
+            CREAMOS EL ARCHIVO DE EXCEL
+            =============================================*/
 
         $nombre = "UltimosCostos" . '.xls';
 
@@ -57,16 +52,16 @@ class ControllerReports
 
         echo utf8_decode("<table>");
         echo "<tr>
-					<th colspan='26' style='font-weight:bold; background:#17202A; color:white;'>SAN FRANCISCO DEKKERLAB</th>
-					</tr>
+                    <th colspan='26' style='font-weight:bold; background:#17202A; color:white;'>SAN FRANCISCO DEKKERLAB</th>
+                    </tr>
 
-					<tr>
-					<th colspan='26' style='font-weight:bold; background:#17202A; color:white;'>R E P O R T E &nbsp; D E &nbsp; U L T I M O S &nbsp; C O S T O S &nbsp</th>
-					</tr>
+                    <tr>
+                    <th colspan='26' style='font-weight:bold; background:#17202A; color:white;'>R E P O R T E &nbsp; D E &nbsp; U L T I M O S &nbsp; C O S T O S &nbsp</th>
+                    </tr>
 
-					<tr>
-					<th colspan='26' style='font-weight:bold; background:#17202A; color:white;'>$nombreEmpresa $añoElegido</th>
-					</tr>";
+                    <tr>
+                    <th colspan='26' style='font-weight:bold; background:#17202A; color:white;'>$nombreEmpresa $año</th>
+                    </tr>";
         echo utf8_decode("<tr>");
         for ($i = 0; $i < count($arregloHeaders); $i++) {
             echo utf8_decode("<td style='font-weight:bold; background:#000000; color:white;'></td>");
@@ -119,111 +114,384 @@ class ControllerReports
 
                 $mes12 = $value['12'];
                 $fecha12 = $reporteFechas[$key]['12'];
-            } else if ($año == '2022' || $año == '2023' and  $empresaElegida == 'DEKKERLAB' and $value['1'] === '0.0') {
+            } else if ($año == '2022' || $año == '2023' and $empresaElegida == 'DEKKERLAB') {
+                $añoAnterior = intval($año) - 1;
+                $codigo = $value["CCODIGOPRODUCTO"];
+                if ($value['1'] === '0.0' || $value['1']  === NULL) {
 
-                if ($value['1'] === '0.0') {
-                    $codigo = $value["CCODIGOPRODUCTO"];
-                    $ultimoCosto = $database->getUltimoCostoDekkerlab($codigo, $año);
 
-                    $mes1 = $ultimoCosto["CULTIMOCOSTOH"];
-                    $fecha1 = $ultimoCosto["CFECHACOSTOH"];
+                    if ($año == '2023') {
+
+                        $ultimoCostoDekkerlabPeriodo1 = $database->getUltimoCostoDekkerlabPeriodo($codigo, $añoAnterior, 12);
+
+                        if ($ultimoCostoDekkerlabPeriodo1 != false) {
+
+                            $mes1 = $ultimoCostoDekkerlabPeriodo1["CULTIMOCOSTOH"];
+                            $fecha1 = $ultimoCostoDekkerlabPeriodo1["CFECHACOSTOH"];
+                        } else {
+
+                            $ultimoCostoDekkerlab = $database->getUltimoCostoDekkerlab($codigo, $año);
+                            if ($ultimoCostoDekkerlab != false) {
+                                $mes1 = $ultimoCostoDekkerlab["CULTIMOCOSTOH"];
+                                $fecha1 = $ultimoCostoDekkerlab["CFECHACOSTOH"];
+                            } else {
+
+                                $ultimoCostoPinturas = $database->getUltimoCostoPinturas($codigo, $año);
+                                $mes1 = $ultimoCostoPinturas["CULTIMOCOSTOH"];
+                                $fecha1 = $ultimoCostoPinturas["CFECHACOSTOH"];
+                            }
+                        }
+                    } else {
+
+                        $ultimoCostoDekkerlabPeriodo1 = $database->getUltimoCostoDekkerlabPeriodo($codigo, $añoAnterior, 12);
+
+                        if ($ultimoCostoDekkerlabPeriodo1 != false) {
+
+                            $mes1 = $ultimoCostoDekkerlabPeriodo1["CULTIMOCOSTOH"];
+                            $fecha1 = $ultimoCostoDekkerlabPeriodo1["CFECHACOSTOH"];
+                        } else {
+                            $ultimoCostoPinturas = $database->getUltimoCostoPinturas($codigo, $año);
+                            $mes1 = $ultimoCostoPinturas["CULTIMOCOSTOH"];
+                            $fecha1 = $ultimoCostoPinturas["CFECHACOSTOH"];
+                        }
+                    }
                 } else {
 
                     $mes1 = $value['1'];
                     $fecha1 = $reporteFechas[$key]['1'];
                 }
-                if ($value['2'] === NULL) {
-                    $mes2 = $mes1;
-                    $fecha2 = $fecha1;
+
+
+                if ($value['2'] === NULL || $value['2'] === '0.0') {
+
+                    $ultimoCostoDekkerlabPeriodo2 = $database->getUltimoCostoDekkerlabPeriodo($codigo, $año, 2);
+
+                    if ($ultimoCostoDekkerlabPeriodo2 != false) {
+                        $mes2 = $ultimoCostoDekkerlabPeriodo2["CULTIMOCOSTOH"];
+                        $fecha2 = $ultimoCostoDekkerlabPeriodo2["CFECHACOSTOH"];
+                    } else {
+                        $mes2 = $mes1;
+                        $fecha2 = $fecha1;
+                    }
                 } else {
                     $mes2 = $value['2'];
                     $fecha2 = $reporteFechas[$key]['2'];
                 }
 
-                if ($value['3'] === NULL) {
-                    $mes3 = $mes2;
-                    $fecha3 = $fecha2;
+                if ($value['3'] === NULL || $value['3'] === '0.0') {
+
+                    $ultimoCostoDekkerlabPeriodo3 = $database->getUltimoCostoDekkerlabPeriodo($codigo, $año, 3);
+
+                    if ($ultimoCostoDekkerlabPeriodo3 != false) {
+                        $mes3 = $ultimoCostoDekkerlabPeriodo3["CULTIMOCOSTOH"];
+                        $fecha3 = $ultimoCostoDekkerlabPeriodo3["CFECHACOSTOH"];
+                    } else {
+                        $mes3 = $mes2;
+                        $fecha3 = $fecha2;
+                    }
                 } else {
                     $mes3 = $value['3'];
                     $fecha3 = $reporteFechas[$key]['3'];
                 }
-                if ($value['4'] === NULL) {
-                    $mes4 = $mes3;
-                    $fecha4 = $fecha3;
+                if ($value['4'] === NULL || $value['4'] === '0.0') {
+
+                    $ultimoCostoDekkerlabPeriodo4 = $database->getUltimoCostoDekkerlabPeriodo($codigo, $año, 4);
+
+                    if ($ultimoCostoDekkerlabPeriodo4 != false) {
+                        $mes4 = $ultimoCostoDekkerlabPeriodo4["CULTIMOCOSTOH"];
+                        $fecha4 = $ultimoCostoDekkerlabPeriodo4["CFECHACOSTOH"];
+                    } else {
+                        $mes4 = $mes3;
+                        $fecha4 = $fecha3;
+                    }
                 } else {
                     $mes4 = $value['4'];
                     $fecha4 = $reporteFechas[$key]['4'];
                 }
-                if ($value['5'] === NULL) {
-                    $mes5 = $mes4;
-                    $fecha5 = $fecha4;
+                if ($value['5'] === NULL || $value['5'] === '0.0') {
+
+                    $ultimoCostoDekkerlabPeriodo5 = $database->getUltimoCostoDekkerlabPeriodo($codigo, $año, 5);
+
+                    if ($ultimoCostoDekkerlabPeriodo5 != false) {
+                        $mes5 = $ultimoCostoDekkerlabPeriodo5["CULTIMOCOSTOH"];
+                        $fecha5 = $ultimoCostoDekkerlabPeriodo5["CFECHACOSTOH"];
+                    } else {
+                        $mes5 = $mes4;
+                        $fecha5 = $fecha4;
+                    }
                 } else {
                     $mes5 = $value['5'];
                     $fecha5 = $reporteFechas[$key]['5'];
                 }
-                if ($value['6'] === NULL) {
-                    $mes6 = $mes5;
-                    $fecha6 = $fecha5;
+                if ($value['6'] === NULL || $value['6'] === '0.0') {
+
+                    $ultimoCostoDekkerlabPeriodo6 = $database->getUltimoCostoDekkerlabPeriodo($codigo, $año, 6);
+
+                    if ($ultimoCostoDekkerlabPeriodo6 != false) {
+                        $mes6 = $ultimoCostoDekkerlabPeriodo6["CULTIMOCOSTOH"];
+                        $fecha6 = $ultimoCostoDekkerlabPeriodo6["CFECHACOSTOH"];
+                    } else {
+                        $mes6 = $mes5;
+                        $fecha6 = $fecha5;
+                    }
                 } else {
                     $mes6 = $value['6'];
                     $fecha6 = $reporteFechas[$key]['6'];
                 }
-                if ($value['7'] === NULL) {
-                    $mes7 = $mes6;
-                    $fecha7 = $fecha6;
+                if ($value['7'] === NULL || $value['7'] === '0.0') {
+
+                    $ultimoCostoDekkerlabPeriodo7 = $database->getUltimoCostoDekkerlabPeriodo($codigo, $año, 7);
+
+                    if ($ultimoCostoDekkerlabPeriodo7 != false) {
+                        $mes7 = $ultimoCostoDekkerlabPeriodo7["CULTIMOCOSTOH"];
+                        $fecha7 = $ultimoCostoDekkerlabPeriodo7["CFECHACOSTOH"];
+                    } else {
+                        $mes7 = $mes6;
+                        $fecha7 = $fecha6;
+                    }
                 } else {
                     $mes7 = $value['7'];
                     $fecha7 = $reporteFechas[$key]['7'];
                 }
-                if ($value['8'] === NULL) {
-                    $mes8 = $mes7;
-                    $fecha8 = $fecha7;
+                if ($value['8'] === NULL || $value['8'] === '0.0') {
+
+                    $ultimoCostoDekkerlabPeriodo8 = $database->getUltimoCostoDekkerlabPeriodo($codigo, $año, 8);
+
+                    if ($ultimoCostoDekkerlabPeriodo8 != false) {
+                        $mes8 = $ultimoCostoDekkerlabPeriodo8["CULTIMOCOSTOH"];
+                        $fecha8 = $ultimoCostoDekkerlabPeriodo8["CFECHACOSTOH"];
+                    } else {
+                        $mes8 = $mes7;
+                        $fecha8 = $fecha7;
+                    }
                 } else {
                     $mes8 = $value['8'];
                     $fecha8 = $reporteFechas[$key]['8'];
                 }
-                if ($value['9'] === NULL) {
-                    $mes9 = $mes8;
-                    $fecha9 = $fecha8;
+                if ($value['9'] === NULL || $value['9'] === '0.0') {
+
+                    $ultimoCostoDekkerlabPeriodo9 = $database->getUltimoCostoDekkerlabPeriodo($codigo, $año, 9);
+
+                    if ($ultimoCostoDekkerlabPeriodo9 != false) {
+                        $mes9 = $ultimoCostoDekkerlabPeriodo9["CULTIMOCOSTOH"];
+                        $fecha9 = $ultimoCostoDekkerlabPeriodo9["CFECHACOSTOH"];
+                    } else {
+                        $mes9 = $mes8;
+                        $fecha9 = $fecha8;
+                    }
                 } else {
                     $mes9 = $value['9'];
                     $fecha9 = $reporteFechas[$key]['9'];
                 }
-                if ($value['10'] === NULL) {
-                    $mes10 = $mes9;
-                    $fecha10 = $fecha9;
+                if ($value['10'] === NULL || $value['10'] === '0.0') {
+
+                    $ultimoCostoDekkerlabPeriodo10 = $database->getUltimoCostoDekkerlabPeriodo($codigo, $año, 10);
+
+                    if ($ultimoCostoDekkerlabPeriodo10 != false) {
+                        $mes10 = $ultimoCostoDekkerlabPeriodo10["CULTIMOCOSTOH"];
+                        $fecha10 = $ultimoCostoDekkerlabPeriodo10["CFECHACOSTOH"];
+                    } else {
+                        $mes10 = $mes9;
+                        $fecha10 = $fecha9;
+                    }
                 } else {
                     $mes10 = $value['10'];
                     $fecha10 = $reporteFechas[$key]['10'];
                 }
-                if ($value['11'] === NULL) {
-                    $mes11 = $mes10;
-                    $fecha11 = $fecha10;
+                if ($value['11'] === NULL || $value['11'] === '0.0') {
+
+                    $ultimoCostoDekkerlabPeriodo11 = $database->getUltimoCostoDekkerlabPeriodo($codigo, $año, 11);
+
+                    if ($ultimoCostoDekkerlabPeriodo11 != false) {
+                        $mes11 = $ultimoCostoDekkerlabPeriodo11["CULTIMOCOSTOH"];
+                        $fecha11 = $ultimoCostoDekkerlabPeriodo11["CFECHACOSTOH"];
+                    } else {
+                        $mes11 = $mes10;
+                        $fecha11 = $fecha10;
+                    }
                 } else {
                     $mes11 = $value['11'];
                     $fecha11 = $reporteFechas[$key]['11'];
                 }
-                if ($value['12'] === NULL) {
-                    $mes12 = $mes11;
-                    $fecha12 = $fecha11;
+                if ($value['12'] === NULL || $value['12'] === '0.0') {
+
+                    $ultimoCostoDekkerlabPeriodo12 = $database->getUltimoCostoDekkerlabPeriodo($codigo, $año, 12);
+
+                    if ($ultimoCostoDekkerlabPeriodo12 != false) {
+                        $mes12 = $ultimoCostoDekkerlabPeriodo12["CULTIMOCOSTOH"];
+                        $fecha12 = $ultimoCostoDekkerlabPeriodo12["CFECHACOSTOH"];
+                    } else {
+                        $mes12 = $mes11;
+                        $fecha12 = $fecha11;
+                    }
                 } else {
                     $mes12 = $value['12'];
                     $fecha12 = $reporteFechas[$key]['12'];
                 }
+                } else if ($año <= '2021' and $empresaElegida == 'DEKKERLAB') {
+
+
+                $codigo = $value["CCODIGOPRODUCTO"];
+
+                $ultimoCostoPinturasPeriodo1 = $database->getUltimoCostoPinturasPeriodo($codigo, $año, 1);
+
+                if ($ultimoCostoPinturasPeriodo1 != false) {
+                    $mes1 = $ultimoCostoPinturasPeriodo1["CULTIMOCOSTOH"];
+                    $fecha1 = $ultimoCostoPinturasPeriodo1["CFECHACOSTOH"];
+                } else {
+                    $ultimoCostoPinturas = $database->getUltimoCostoPinturas($codigo, $año);
+                    $mes1 = $ultimoCostoPinturas["CULTIMOCOSTOH"];
+                    $fecha1 = $ultimoCostoPinturas["CFECHACOSTOH"];
+                }
+
+                $ultimoCostoPinturasPeriodo2 = $database->getUltimoCostoPinturasPeriodo($codigo, $año, 2);
+
+                if ($ultimoCostoPinturasPeriodo2 != false) {
+                    $mes2 = $ultimoCostoPinturasPeriodo2["CULTIMOCOSTOH"];
+                    $fecha2 = $ultimoCostoPinturasPeriodo2["CFECHACOSTOH"];
+                } else {
+                    $mes2 = $mes1;
+                    $fecha2 = $fecha1;
+                }
+
+                $ultimoCostoPinturasPeriodo3 = $database->getUltimoCostoPinturasPeriodo($codigo, $año, 3);
+                if ($ultimoCostoPinturasPeriodo3 != false) {
+                    $mes3 = $ultimoCostoPinturasPeriodo3["CULTIMOCOSTOH"];
+                    $fecha3 = $ultimoCostoPinturasPeriodo3["CFECHACOSTOH"];
+                } else {
+                    $mes3 = $mes2;
+                    $fecha3 = $fecha2;
+                }
+
+                $ultimoCostoPinturasPeriodo4 = $database->getUltimoCostoPinturasPeriodo($codigo, $año, 4);
+
+                if ($ultimoCostoPinturasPeriodo4 != false) {
+                    $mes4 = $ultimoCostoPinturasPeriodo4["CULTIMOCOSTOH"];
+                    $fecha4 = $ultimoCostoPinturasPeriodo4["CFECHACOSTOH"];
+                } else {
+                    $mes4 = $mes3;
+                    $fecha4 = $fecha3;
+                }
+
+                $ultimoCostoPinturasPeriodo5 = $database->getUltimoCostoPinturasPeriodo($codigo, $año, 5);
+
+                if ($ultimoCostoPinturasPeriodo5 != false) {
+                    $mes5 = $ultimoCostoPinturasPeriodo5["CULTIMOCOSTOH"];
+                    $fecha5 = $ultimoCostoPinturasPeriodo5["CFECHACOSTOH"];
+                } else {
+                    $mes5 = $mes4;
+                    $fecha5 = $fecha4;
+                }
+
+                $ultimoCostoPinturasPeriodo6 = $database->getUltimoCostoPinturasPeriodo($codigo, $año, 6);
+
+                if ($ultimoCostoPinturasPeriodo6 != false) {
+                    $mes6 = $ultimoCostoPinturasPeriodo6["CULTIMOCOSTOH"];
+                    $fecha6 = $ultimoCostoPinturasPeriodo6["CFECHACOSTOH"];
+                } else {
+                    $mes6 = $mes5;
+                    $fecha6 = $fecha5;
+                }
+
+                $ultimoCostoPinturasPeriodo7 = $database->getUltimoCostoPinturasPeriodo($codigo, $año, 7);
+
+                if ($ultimoCostoPinturasPeriodo7 != false) {
+                    $mes7 = $ultimoCostoPinturasPeriodo7["CULTIMOCOSTOH"];
+                    $fecha7 = $ultimoCostoPinturasPeriodo7["CFECHACOSTOH"];
+                } else {
+                    $mes7 = $mes6;
+                    $fecha7 = $fecha6;
+                }
+
+                $ultimoCostoPinturasPeriodo8 = $database->getUltimoCostoPinturasPeriodo($codigo, $año, 8);
+
+                if ($ultimoCostoPinturasPeriodo8 != false) {
+                    $mes8 = $ultimoCostoPinturasPeriodo8["CULTIMOCOSTOH"];
+                    $fecha8 = $ultimoCostoPinturasPeriodo8["CFECHACOSTOH"];
+                } else {
+                    $mes8 = $mes7;
+                    $fecha8 = $fecha7;
+                }
+
+                $ultimoCostoPinturasPeriodo9 = $database->getUltimoCostoPinturasPeriodo($codigo, $año, 9);
+
+                if ($ultimoCostoPinturasPeriodo9 != false) {
+                    $mes9 = $ultimoCostoPinturasPeriodo9["CULTIMOCOSTOH"];
+                    $fecha9 = $ultimoCostoPinturasPeriodo9["CFECHACOSTOH"];
+                } else {
+                    $mes9 = $mes8;
+                    $fecha9 = $fecha8;
+                }
+
+                $ultimoCostoPinturasPeriodo10 = $database->getUltimoCostoPinturasPeriodo($codigo, $año, 10);
+
+                if ($ultimoCostoPinturasPeriodo10 != false) {
+                    $mes10 = $ultimoCostoPinturasPeriodo10["CULTIMOCOSTOH"];
+                    $fecha10 = $ultimoCostoPinturasPeriodo10["CFECHACOSTOH"];
+                } else {
+                    $mes10 = $mes9;
+                    $fecha10 = $fecha9;
+                }
+
+                $ultimoCostoPinturasPeriodo11 = $database->getUltimoCostoPinturasPeriodo($codigo, $año, 11);
+
+                if ($ultimoCostoPinturasPeriodo11 != false) {
+                    $mes11 = $ultimoCostoPinturasPeriodo11["CULTIMOCOSTOH"];
+                    $fecha11 = $ultimoCostoPinturasPeriodo11["CFECHACOSTOH"];
+                } else {
+                    $mes11 = $mes10;
+                    $fecha11 = $fecha10;
+                }
+
+                if ($año == '2021') {
+
+                    if ($value['12'] === '0.0' || $value['12'] === NULL) {
+                        $codigo = $value["CCODIGOPRODUCTO"];
+
+                        $ultimoCostoPinturasPeriodo12 = $database->getUltimoCostoPinturasPeriodo($codigo, $año, 12);
+
+                        if ($ultimoCostoPinturasPeriodo12 != false) {
+                            $mes12 = $ultimoCostoPinturasPeriodo12["CULTIMOCOSTOH"];
+                            $fecha12 = $ultimoCostoPinturasPeriodo12["CFECHACOSTOH"];
+                        } else {
+                            $mes12 = $mes11;
+                            $fecha12 = $fecha11;
+                        }
+                    } else {
+
+                        $mes12 = $value['12'];
+                        $fecha12 = $reporteFechas[$key]['12'];
+                    }
+                } else {
+
+                    $ultimoCostoPinturasPeriodo12 = $database->getUltimoCostoPinturasPeriodo($codigo, $año, 12);
+
+                    if ($ultimoCostoPinturasPeriodo12 != false) {
+                        $mes12 = $ultimoCostoPinturasPeriodo12["CULTIMOCOSTOH"];
+                        $fecha12 = $ultimoCostoPinturasPeriodo12["CFECHACOSTOH"];
+                    } else {
+                        $mes12 = $mes11;
+                        $fecha12 = $fecha11;
+                    }
+                }
             } else {
 
-                if ($value['1'] === '0.0') {
+                if ($value['1'] === '0.0' || $value['1'] === NULL) {
                     $idProducto = $value[0];
                     $ultimoCosto = $database->getUltimoCosto($idProducto, $año);
-
-                    $mes1 = $ultimoCosto["CULTIMOCOSTOH"];
-                    $fecha1 = $ultimoCosto["CFECHACOSTOH"];
+                    if ($ultimoCosto != true) {
+                        $mes1 = 0;
+                        $fecha1 = 0;
+                    } else {
+                        $mes1 = $ultimoCosto["CULTIMOCOSTOH"];
+                        $fecha1 = $ultimoCosto["CFECHACOSTOH"];
+                    }
                 } else {
 
                     $mes1 = $value['1'];
                     $fecha1 = $reporteFechas[$key]['1'];
                 }
-                if ($value['2'] === NULL) {
+                if ($value['2'] === '0.0' || $value['2'] === NULL) {
                     $mes2 = $mes1;
                     $fecha2 = $fecha1;
                 } else {
@@ -231,70 +499,70 @@ class ControllerReports
                     $fecha2 = $reporteFechas[$key]['2'];
                 }
 
-                if ($value['3'] === NULL) {
+                if ($value['3'] === '0.0' || $value['3'] === NULL) {
                     $mes3 = $mes2;
                     $fecha3 = $fecha2;
                 } else {
                     $mes3 = $value['3'];
                     $fecha3 = $reporteFechas[$key]['3'];
                 }
-                if ($value['4'] === NULL) {
+                if ($value['4'] === '0.0' || $value['4'] === NULL) {
                     $mes4 = $mes3;
                     $fecha4 = $fecha3;
                 } else {
                     $mes4 = $value['4'];
                     $fecha4 = $reporteFechas[$key]['4'];
                 }
-                if ($value['5'] === NULL) {
+                if ($value['5'] === '0.0' || $value['5'] === NULL) {
                     $mes5 = $mes4;
                     $fecha5 = $fecha4;
                 } else {
                     $mes5 = $value['5'];
                     $fecha5 = $reporteFechas[$key]['5'];
                 }
-                if ($value['6'] === NULL) {
+                if ($value['6'] === '0.0' || $value['6'] === NULL) {
                     $mes6 = $mes5;
                     $fecha6 = $fecha5;
                 } else {
                     $mes6 = $value['6'];
                     $fecha6 = $reporteFechas[$key]['6'];
                 }
-                if ($value['7'] === NULL) {
+                if ($value['7'] === '0.0' || $value['7'] === NULL) {
                     $mes7 = $mes6;
                     $fecha7 = $fecha6;
                 } else {
                     $mes7 = $value['7'];
                     $fecha7 = $reporteFechas[$key]['7'];
                 }
-                if ($value['8'] === NULL) {
+                if ($value['8'] === '0.0' || $value['8'] === NULL) {
                     $mes8 = $mes7;
                     $fecha8 = $fecha7;
                 } else {
                     $mes8 = $value['8'];
                     $fecha8 = $reporteFechas[$key]['8'];
                 }
-                if ($value['9'] === NULL) {
+                if ($value['9'] === '0.0' || $value['9'] === NULL) {
                     $mes9 = $mes8;
                     $fecha9 = $fecha8;
                 } else {
                     $mes9 = $value['9'];
                     $fecha9 = $reporteFechas[$key]['9'];
                 }
-                if ($value['10'] === NULL) {
+                if ($value['10'] === '0.0' || $value['10'] === NULL) {
                     $mes10 = $mes9;
                     $fecha10 = $fecha9;
                 } else {
                     $mes10 = $value['10'];
                     $fecha10 = $reporteFechas[$key]['10'];
                 }
-                if ($value['11'] === NULL) {
+                if ($value['11'] === '0.0' || $value['11'] === NULL) {
                     $mes11 = $mes10;
                     $fecha11 = $fecha10;
                 } else {
                     $mes11 = $value['11'];
                     $fecha11 = $reporteFechas[$key]['11'];
                 }
-                if ($value['12'] === NULL) {
+                if ($value['12'] === '0.0' || $value['12'] === NULL) {
                     $mes12 = $mes11;
                     $fecha12 = $fecha11;
                 } else {
@@ -302,26 +570,25 @@ class ControllerReports
                     $fecha12 = $reporteFechas[$key]['12'];
                 }
             }
-
             $codigoProducto = "=\"" . $value["CCODIGOPRODUCTO"] . "\"";
             $style = 'mso-number-format:"@";';
             echo utf8_decode("<tr>
-										<td style='" . $style . "'>" . $value["CCODIGOPRODUCTO"] . "</td>
-				 						<td style='color:black;'>" . $value["CNOMBREPRODUCTO"] . "</td>
+                                        <td style='" . $style . "'>" . $value["CCODIGOPRODUCTO"] . "</td>
+                                        <td style='color:black;'>" . $value["CNOMBREPRODUCTO"] . "</td>
                                         <td style='color:black;'>" . substr($fecha1, 0, 10) . "</td>
-										<td style='color:black;'>" . number_format($mes1, 2) . "</td>
+                                        <td style='color:black;'>" . number_format($mes1, 2) . "</td>
                                         <td style='color:black;'>" . substr($fecha2, 0, 10) . "</td>
-										<td style='color:black;'>" . number_format($mes2, 2) . "</td>
+                                        <td style='color:black;'>" . number_format($mes2, 2) . "</td>
                                         <td style='color:black;'>" . substr($fecha3, 0, 10) . "</td>
-										<td style='color:black;'>" . number_format($mes3, 2) . "</td>
+                                        <td style='color:black;'>" . number_format($mes3, 2) . "</td>
                                         <td style='color:black;'>" . substr($fecha4, 0, 10) . "</td>
-										<td style='color:black;'>" . number_format($mes4, 2) . "</td>
+                                        <td style='color:black;'>" . number_format($mes4, 2) . "</td>
                                         <td style='color:black;'>" . substr($fecha5, 0, 10) . "</td>
-										<td style='color:black;'>" . number_format($mes5, 2) . "</td>
+                                        <td style='color:black;'>" . number_format($mes5, 2) . "</td>
                                         <td style='color:black;'>" . substr($fecha6, 0, 10) . "</td>
-										<td style='color:black;'>" . number_format($mes6, 2) . "</td>
+                                        <td style='color:black;'>" . number_format($mes6, 2) . "</td>
                                         <td style='color:black;'>" . substr($fecha7, 0, 10) . "</td>
-										<td style='color:black;'>" . number_format($mes7, 2) . "</td>
+                                        <td style='color:black;'>" . number_format($mes7, 2) . "</td>
                                         <td style='color:black;'>" . substr($fecha8, 0, 10) . "</td>
                                         <td style='color:black;'>" . number_format($mes8, 2) . "</td>
                                         <td style='color:black;'>" . substr($fecha9, 0, 10) . "</td>
@@ -332,8 +599,8 @@ class ControllerReports
                                         <td style='color:black;'>" . number_format($mes11, 2) . "</td>
                                         <td style='color:black;'>" . substr($fecha12, 0, 10) . "</td>
                                         <td style='color:black;'>" . number_format($mes12, 2) . "</td>
-				
-										</tr>");
+                
+                                        </tr>");
         }
 
 

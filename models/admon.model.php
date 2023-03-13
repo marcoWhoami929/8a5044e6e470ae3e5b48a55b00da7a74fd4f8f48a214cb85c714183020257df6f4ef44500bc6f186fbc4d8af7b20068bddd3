@@ -1024,6 +1024,82 @@ class ModelAdmon
 
           $stmt = null;
      }
+      static public function mdlObtenerListaMarcasDekkerlab()
+     {
+          $stmt = ConexionsBd::conectarPinturas()->prepare("WITH Marcas As(SELECT 
+                CIDVALORCLASIFICACION as 'Id'
+               ,CVALORCLASIFICACION as Marca
+             
+          FROM [adDEKKERLAB].[dbo].[admClasificacionesValores] WHERE CIDCLASIFICACION = 25),
+          marcasOrdenadas As(
+            SELECT
+                *
+            FROM Marcas)
+            SELECT * FROM marcasOrdenadas ORDER BY Marca ASC
+        ");
+
+          $stmt->execute();
+
+          return $stmt->fetchAll();
+
+          $stmt->close();
+
+          $stmt = null;
+     }
+      static public function mdlObtenerListaMarcasEmpresa($empresa)
+     {
+          $stmt = ConexionsBd::conectarPinturas()->prepare("WITH Marcas As(SELECT 
+          CIDVALORCLASIFICACION as 'Id'
+         ,CVALORCLASIFICACION as Marca
+       
+               FROM [$empresa].[dbo].[admClasificacionesValores] WHERE CIDCLASIFICACION = 25),
+               marcasOrdenadas As(
+                    SELECT
+                         *
+                    FROM Marcas)
+                    SELECT * FROM marcasOrdenadas ORDER BY Marca ASC
+               ");
+
+          $stmt->execute();
+
+          return $stmt->fetchAll();
+
+          $stmt->close();
+
+          $stmt = null;
+     }
+     static public function mdlObtenerListaCategorias()
+     {
+          $stmt = ConexionsBd::conectarDekkerlab()->prepare("SELECT 
+               CIDVALORCLASIFICACION as 'Id'
+               ,CVALORCLASIFICACION as 'Categoria'
+                
+            FROM [adDEKKERLAB].[dbo].[admClasificacionesValores] WHERE CIDCLASIFICACION = 27");
+
+          $stmt->execute();
+
+          return $stmt->fetchAll();
+
+          $stmt->close();
+
+          $stmt = null;
+     }
+     static public function mdlObtenerListaFamilias()
+     {
+          $stmt = ConexionsBd::conectarDekkerlab()->prepare("SELECT 
+               CIDVALORCLASIFICACION as 'Id'
+               ,CVALORCLASIFICACION as 'Familia'
+                
+            FROM [adDEKKERLAB].[dbo].[admClasificacionesValores] WHERE CIDCLASIFICACION = 26");
+
+          $stmt->execute();
+
+          return $stmt->fetchAll();
+
+          $stmt->close();
+
+          $stmt = null;
+     }
      static public function mdlRegistroConcepto($empresa, $datos)
      {
           switch ($empresa) {

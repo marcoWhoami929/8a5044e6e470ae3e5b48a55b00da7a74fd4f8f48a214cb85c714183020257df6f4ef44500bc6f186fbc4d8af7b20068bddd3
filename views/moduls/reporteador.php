@@ -41,14 +41,26 @@ class loadReports
     public $nombreDia;
     public $centroDetalle;
     public $mesElegido;
-    public function reportUltimosCostos()
+    public $marcas;
+     public function reporteUltimosCostos()
     {
         $empresa = $this->empresa;
         $query = $this->query;
+        $marcas = $this->marcas;
         $año = $this->año;
+        $per_page = $this->per_page;
+        $campoOrden = $this->campo;
+        $orden = $this->orden;
+        $estatus = $this->estatus;
+        $page = $this->page;
+        //Variables de paginación
+        $page = (isset($page) && !empty($page)) ? $page : 1;
+        $offset = ($page - 1) * $per_page;
+        $search = array("empresa" => $empresa, "query" => $query, "marcas" => $marcas, "año" => $año, "estatus" => $estatus, "per_page" => $per_page, "offset" => $offset, "campo" => $campoOrden, "orden" => $orden);
+
 
         $obtenerReporte = new ControllerReports();
-        $obtenerReporte->ctrDescargarReporteUltimosCostos($empresa, $query, $año);
+        $obtenerReporte->ctrDescargarReporteUltimosCostos($search);
     }
 
     public function reporteVentasDiarias()
@@ -414,10 +426,16 @@ class loadReports
 
 if (isset($_GET["reporteUltimosCostos"])) {
     $reporte = new loadReports();
-    $reporte->empresa = $_GET["reporteUltimosCostos"];
+    $reporte->empresa = $_GET["empresa"];
     $reporte->query = $_GET["query"];
+    $reporte->marcas = $_GET["marcas"];
     $reporte->año = $_GET["año"];
-    $reporte->reportUltimosCostos();
+    $reporte->per_page = $_GET["per_page"];
+    $reporte->campo = $_GET["campo"];
+    $reporte->orden = $_GET["orden"];
+    $reporte->estatus = $_GET["estatus"];
+    $reporte->page = $_GET["page"];
+    $reporte->reporteUltimosCostos();
 }
 if (isset($_GET["reporteVentasDiarias"])) {
     $reporteVentas = new loadReports();
